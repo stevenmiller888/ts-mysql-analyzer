@@ -140,8 +140,8 @@ describe('MySQLAnalyzer', () => {
       {
         severity: DiagnosticSeverity.Suggestion,
         message: `You can optimize this query by adding a MySQL index for column 'name'.`,
-        start: 33,
-        stop: 45
+        start: 26,
+        stop: 29
       }
     ])
   })
@@ -153,14 +153,14 @@ describe('MySQLAnalyzer', () => {
       {
         severity: DiagnosticSeverity.Suggestion,
         message: `You can optimize this query by adding a MySQL index for column 'name'.`,
-        start: 33,
-        stop: 45
+        start: 26,
+        stop: 29
       },
       {
         severity: DiagnosticSeverity.Suggestion,
         message: `You can optimize this query by adding a MySQL index for column 'email'.`,
-        start: 57,
-        stop: 75
+        start: 51,
+        stop: 55
       }
     ])
   })

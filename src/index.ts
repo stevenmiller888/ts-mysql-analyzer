@@ -221,7 +221,7 @@ export class MySQLAnalyzer {
 
       const valueRef = valueRefs.find(r => r.columnReference?.column === column)
 
-      diagnostics = diagnostics.concat(this.analyzeColumn(statement, schemaColumn, valueRef))
+      diagnostics = diagnostics.concat(this.analyzeColumn(statement, schemaColumn, columnRef, valueRef))
     }
 
     return diagnostics
@@ -230,6 +230,7 @@ export class MySQLAnalyzer {
   private analyzeColumn(
     statement: Statement,
     schemaColumn: SchemaColumn,
+    columnRef: ColumnReference,
     valueRef?: ValueReference
   ): MySQLAnalyzerDiagnostic[] {
     const diagnostics: MySQLAnalyzerDiagnostic[] = []
@@ -251,8 +252,8 @@ export class MySQLAnalyzer {
       diagnostics.push({
         severity: DiagnosticSeverity.Suggestion,
         message: `You can optimize this query by adding a MySQL index for column '${schemaColumn.name}'.`,
-        start: statement.start + valueRef.start,
-        stop: statement.start + valueRef.stop
+        start: statement.start + columnRef.start,
+        stop: statement.start + columnRef.stop
       })
     }
 
