@@ -1,0 +1,82 @@
+{
+  "name": "ts-mysql-analyzer",
+  "version": "0.0.0",
+  "description": "A MySQL query analyzer.",
+  "license": "MIT",
+  "repository": "stevenmiller888/ts-mysql-analyzer",
+  "author": "Steven Miller (https://github.com/stevenmiller888)",
+  "engines": {
+    "node": ">=12.13"
+  },
+  "keywords": [
+    "typescript",
+    "mysql-analyzer",
+    "sql-analyzer",
+    "query",
+    "mysql",
+    "sql"
+  ],
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "pub": "np",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "build": "tsc",
+    "watch": "tsc -b -w",
+    "clean": "rm -rf dist",
+    "db-cli": "docker run -it --network host chaifeng/mycli mysql://127.0.0.1:3310/test"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "printWidth": 120
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/"
+    ],
+    "testEnvironment": "node"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{yml,md,json}": [
+      "prettier --write"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "devDependencies": {
+    "@types/jest": "^25.1.4",
+    "@types/node": "^13.9.0",
+    "@types/prettier": "^1.19.0",
+    "@typescript-eslint/eslint-plugin": "^2.22.0",
+    "@typescript-eslint/parser": "^2.22.0",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.0",
+    "husky": "^4.2.3",
+    "jest": "^25.1.0",
+    "lint-staged": "^10.0.8",
+    "np": "^6.2.0",
+    "prettier": "^1.19.1",
+    "ts-jest": "^25.2.1",
+    "ts-node": "^8.6.2"
+  },
+  "dependencies": {
+    "leven": "^3.1.0",
+    "ts-mysql-parser": "^0.1.2",
+    "ts-mysql-schema": "^0.0.3",
+    "typescript": "^3.8.3"
+  }
+}
