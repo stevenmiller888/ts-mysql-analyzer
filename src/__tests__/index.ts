@@ -1,4 +1,4 @@
-import { MySQLAnalyzer, DiagnosticSeverity } from '../'
+import { MySQLAnalyzer, DiagnosticSeverity, DiagnosticCode } from '../'
 import { MySQLSchema, Schema } from 'ts-mysql-schema'
 
 let schema: Schema
@@ -19,7 +19,8 @@ describe('MySQLAnalyzer', () => {
         severity: DiagnosticSeverity.Error,
         message: 'MySQL query is empty.',
         start: 0,
-        stop: 0
+        stop: 0,
+        code: DiagnosticCode.EmptyQuery
       }
     ])
   })
@@ -32,7 +33,8 @@ describe('MySQLAnalyzer', () => {
         severity: DiagnosticSeverity.Error,
         message: 'Unfinished double quoted string literal',
         start: 0,
-        stop: 1
+        stop: 1,
+        code: DiagnosticCode.LexerError
       }
     ])
   })
@@ -45,7 +47,8 @@ describe('MySQLAnalyzer', () => {
         severity: DiagnosticSeverity.Error,
         message: `Extraneous input "SELE" found, expecting EOF, BEGIN, CACHE, CHECKSUM, COMMIT`,
         start: 0,
-        stop: 3
+        stop: 3,
+        code: DiagnosticCode.ParserError
       }
     ])
   })
@@ -64,7 +67,8 @@ describe('MySQLAnalyzer', () => {
         severity: DiagnosticSeverity.Warning,
         message: 'Column count does not match row count',
         start: 0,
-        stop: 43
+        stop: 43,
+        code: DiagnosticCode.ColumnRowMismatch
       }
     ])
   })
@@ -77,7 +81,8 @@ describe('MySQLAnalyzer', () => {
         severity: DiagnosticSeverity.Warning,
         message: "Table 'invalid_table' does not exist in database 'test'. Did you mean 'posts'?",
         start: 14,
-        stop: 26
+        stop: 26,
+        code: DiagnosticCode.MissingTable
       }
     ])
   })
@@ -90,13 +95,15 @@ describe('MySQLAnalyzer', () => {
         severity: DiagnosticSeverity.Warning,
         message: "Table 'invalid_table1' does not exist in database 'test'. Did you mean 'posts'?",
         start: 14,
-        stop: 27
+        stop: 27,
+        code: DiagnosticCode.MissingTable
       },
       {
         severity: DiagnosticSeverity.Warning,
         message: "Table 'invalid_table2' does not exist in database 'test'. Did you mean 'posts'?",
         start: 40,
-        stop: 53
+        stop: 53,
+        code: DiagnosticCode.MissingTable
       }
     ])
   })
@@ -109,7 +116,8 @@ describe('MySQLAnalyzer', () => {
         severity: DiagnosticSeverity.Warning,
         message: "Column 'invalid_column' does not exist in table 'users'. Did you mean 'name'?",
         start: 7,
-        stop: 20
+        stop: 20,
+        code: DiagnosticCode.MissingColumn
       }
     ])
   })
@@ -122,13 +130,15 @@ describe('MySQLAnalyzer', () => {
         severity: DiagnosticSeverity.Warning,
         message: "Column 'invalid_column1' does not exist in table 'users'. Did you mean 'name'?",
         start: 7,
-        stop: 21
+        stop: 21,
+        code: DiagnosticCode.MissingColumn
       },
       {
         severity: DiagnosticSeverity.Warning,
         message: "Column 'invalid_column2' does not exist in table 'users'. Did you mean 'name'?",
         start: 24,
-        stop: 38
+        stop: 38,
+        code: DiagnosticCode.MissingColumn
       }
     ])
   })
@@ -141,7 +151,8 @@ describe('MySQLAnalyzer', () => {
         severity: DiagnosticSeverity.Suggestion,
         message: `You can optimize this query by adding a MySQL index for column 'name'.`,
         start: 26,
-        stop: 29
+        stop: 29,
+        code: DiagnosticCode.MissingIndex
       }
     ])
   })
@@ -154,13 +165,15 @@ describe('MySQLAnalyzer', () => {
         severity: DiagnosticSeverity.Suggestion,
         message: `You can optimize this query by adding a MySQL index for column 'name'.`,
         start: 26,
-        stop: 29
+        stop: 29,
+        code: DiagnosticCode.MissingIndex
       },
       {
         severity: DiagnosticSeverity.Suggestion,
         message: `You can optimize this query by adding a MySQL index for column 'email'.`,
         start: 51,
-        stop: 55
+        stop: 55,
+        code: DiagnosticCode.MissingIndex
       }
     ])
   })
@@ -173,13 +186,15 @@ describe('MySQLAnalyzer', () => {
         severity: DiagnosticSeverity.Warning,
         message: 'Type boolean is not assignable to type string.',
         start: 31,
-        stop: 34
+        stop: 34,
+        code: DiagnosticCode.TypeMismatch
       },
       {
         severity: DiagnosticSeverity.Warning,
         message: 'Type string is not assignable to type number.',
         start: 50,
-        stop: 62
+        stop: 62,
+        code: DiagnosticCode.TypeMismatch
       }
     ])
   })
@@ -193,7 +208,8 @@ describe('MySQLAnalyzer', () => {
           severity: DiagnosticSeverity.Warning,
           message: 'Type string is not assignable to type number.',
           start: 36,
-          stop: 48
+          stop: 48,
+          code: DiagnosticCode.TypeMismatch
         }
       ])
     })
@@ -206,7 +222,8 @@ describe('MySQLAnalyzer', () => {
           severity: DiagnosticSeverity.Warning,
           message: 'Type string is not assignable to type boolean.',
           start: 36,
-          stop: 48
+          stop: 48,
+          code: DiagnosticCode.TypeMismatch
         }
       ])
     })
@@ -219,7 +236,8 @@ describe('MySQLAnalyzer', () => {
           severity: DiagnosticSeverity.Warning,
           message: 'Type string is not assignable to type date.',
           start: 36,
-          stop: 48
+          stop: 48,
+          code: DiagnosticCode.TypeMismatch
         }
       ])
     })
@@ -240,7 +258,8 @@ describe('MySQLAnalyzer', () => {
           severity: DiagnosticSeverity.Warning,
           message: 'Type number is not assignable to type string.',
           start: 31,
-          stop: 31
+          stop: 31,
+          code: DiagnosticCode.TypeMismatch
         }
       ])
     })
@@ -253,7 +272,8 @@ describe('MySQLAnalyzer', () => {
           severity: DiagnosticSeverity.Warning,
           message: 'Type number is not assignable to type boolean.',
           start: 36,
-          stop: 36
+          stop: 36,
+          code: DiagnosticCode.TypeMismatch
         }
       ])
     })
@@ -266,7 +286,8 @@ describe('MySQLAnalyzer', () => {
           severity: DiagnosticSeverity.Warning,
           message: 'Type number is not assignable to type date.',
           start: 36,
-          stop: 36
+          stop: 36,
+          code: DiagnosticCode.TypeMismatch
         }
       ])
     })
@@ -287,7 +308,8 @@ describe('MySQLAnalyzer', () => {
           severity: DiagnosticSeverity.Warning,
           message: 'Type boolean is not assignable to type string.',
           start: 31,
-          stop: 34
+          stop: 34,
+          code: DiagnosticCode.TypeMismatch
         }
       ])
     })
@@ -300,7 +322,8 @@ describe('MySQLAnalyzer', () => {
           severity: DiagnosticSeverity.Warning,
           message: 'Type boolean is not assignable to type number.',
           start: 36,
-          stop: 39
+          stop: 39,
+          code: DiagnosticCode.TypeMismatch
         }
       ])
     })
@@ -313,7 +336,8 @@ describe('MySQLAnalyzer', () => {
           severity: DiagnosticSeverity.Warning,
           message: 'Type boolean is not assignable to type date.',
           start: 36,
-          stop: 39
+          stop: 39,
+          code: DiagnosticCode.TypeMismatch
         }
       ])
     })
@@ -334,7 +358,8 @@ describe('MySQLAnalyzer', () => {
           severity: DiagnosticSeverity.Warning,
           message: 'Type null is not assignable to type string.',
           start: 31,
-          stop: 34
+          stop: 34,
+          code: DiagnosticCode.TypeMismatch
         }
       ])
     })
@@ -347,7 +372,8 @@ describe('MySQLAnalyzer', () => {
           severity: DiagnosticSeverity.Warning,
           message: 'Type null is not assignable to type number.',
           start: 36,
-          stop: 39
+          stop: 39,
+          code: DiagnosticCode.TypeMismatch
         }
       ])
     })
@@ -360,7 +386,8 @@ describe('MySQLAnalyzer', () => {
           severity: DiagnosticSeverity.Warning,
           message: 'Type null is not assignable to type boolean.',
           start: 36,
-          stop: 39
+          stop: 39,
+          code: DiagnosticCode.TypeMismatch
         }
       ])
     })
@@ -373,7 +400,8 @@ describe('MySQLAnalyzer', () => {
           severity: DiagnosticSeverity.Warning,
           message: 'Type null is not assignable to type date.',
           start: 36,
-          stop: 39
+          stop: 39,
+          code: DiagnosticCode.TypeMismatch
         }
       ])
     })

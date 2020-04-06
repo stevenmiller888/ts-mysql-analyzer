@@ -24,6 +24,8 @@ export interface MySQLAnalyzerDiagnostic {
   readonly start: number
   /** The stopping position of the diagnostic in the source text */
   readonly stop: number
+  /** The unique diagnostic code */
+  readonly code: number
 }
 
 /** Represents the severity of the diagnostic */
@@ -34,6 +36,26 @@ export enum DiagnosticSeverity {
   Error,
   /** Something to suggest a better way of doing things */
   Suggestion
+}
+
+/** Represents the code of the diagnostic */
+export enum DiagnosticCode {
+  /** An empty MySQL query */
+  EmptyQuery = 1000,
+  /** A query that contains a lexer error */
+  LexerError = 1001,
+  /** A query that contains a parser error */
+  ParserError = 1002,
+  /** A mismatch in the number of rows and columns in an INSERT statement */
+  ColumnRowMismatch = 1003,
+  /** A table reference that does not exist in the schema */
+  MissingTable = 1004,
+  /** A column reference that does not exist in the referenced table in the schema */
+  MissingColumn = 1005,
+  /** An invalid type assignment */
+  TypeMismatch = 1006,
+  /** A missing database index for a referenced column */
+  MissingIndex = 1007
 }
 
 /** Represents the options passed to the analyzer */
@@ -60,7 +82,8 @@ export class MySQLAnalyzer {
           severity: DiagnosticSeverity.Error,
           message: 'MySQL query is empty.',
           start: 0,
-          stop: text.length
+          stop: text.length,
+          code: DiagnosticCode.EmptyQuery
         }
       ]
     }
@@ -86,7 +109,8 @@ export class MySQLAnalyzer {
         severity: DiagnosticSeverity.Error,
         message: result.lexerError.message,
         start: statement.start,
-        stop: statement.stop
+        stop: statement.stop,
+        code: DiagnosticCode.LexerError
       })
     }
 
@@ -96,7 +120,8 @@ export class MySQLAnalyzer {
         severity: DiagnosticSeverity.Error,
         message: result.parserError.message,
         start: statement.start + (offendingToken?.startIndex || 0),
-        stop: statement.start + (offendingToken?.stopIndex || 0)
+        stop: statement.start + (offendingToken?.stopIndex || 0),
+        code: DiagnosticCode.ParserError
       })
     }
 
@@ -120,7 +145,8 @@ export class MySQLAnalyzer {
           severity: DiagnosticSeverity.Warning,
           message: 'Column count does not match row count',
           start: statement.start,
-          stop: statement.stop
+          stop: statement.stop,
+          code: DiagnosticCode.ColumnRowMismatch
         })
       }
     }
@@ -165,7 +191,8 @@ export class MySQLAnalyzer {
           severity: DiagnosticSeverity.Warning,
           message: messageParts.join(''),
           start: statement.start + start,
-          stop: statement.start + stop
+          stop: statement.start + stop,
+          code: DiagnosticCode.MissingTable
         })
       }
     }
@@ -203,7 +230,8 @@ export class MySQLAnalyzer {
           severity: DiagnosticSeverity.Warning,
           message: messageParts.join(''),
           start: statement.start + start,
-          stop: statement.start + stop
+          stop: statement.start + stop,
+          code: DiagnosticCode.MissingColumn
         })
       }
     }
@@ -228,7 +256,8 @@ export class MySQLAnalyzer {
         severity: DiagnosticSeverity.Warning,
         message: `Type ${valueRef.dataType} is not assignable to type ${schemaColumn.tsType}.`,
         start: statement.start + valueRef.start,
-        stop: statement.start + valueRef.stop
+        stop: statement.start + valueRef.stop,
+        code: DiagnosticCode.TypeMismatch
       })
     }
 
@@ -237,7 +266,8 @@ export class MySQLAnalyzer {
         severity: DiagnosticSeverity.Suggestion,
         message: `You can optimize this query by adding a MySQL index for column '${schemaColumn.name}'.`,
         start: statement.start + columnRef.start,
-        stop: statement.start + columnRef.stop
+        stop: statement.start + columnRef.stop,
+        code: DiagnosticCode.MissingIndex
       })
     }
 
