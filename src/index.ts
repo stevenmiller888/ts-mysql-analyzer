@@ -2,14 +2,17 @@ import MySQLParser, {
   Statement,
   ParserOptions,
   MySQLQueryType,
-  ReferenceType,
-  TableReference,
   ColumnReference,
   ValueReference,
-  ParseResult
+  ParseResult,
+  References,
+  AliasReference
 } from 'ts-mysql-parser'
 import { Schema, SchemaTable, SchemaColumn } from 'ts-mysql-schema'
 import { validNullAssignment } from './lib/valid-null-assignment'
+import { getSchemaColumn } from './lib/get-schema-column'
+import { getSchemaTable } from './lib/get-schema-table'
+import { missingIndex } from './lib/missing-index'
 import { getCorrection } from './lib/autocorrect'
 
 /** Represents a diagnostic uncovered during analysis */
@@ -107,19 +110,10 @@ export class MySQLAnalyzer {
       return diagnostics
     }
 
-    const columnRefs = result.references.filter(r => {
-      return r.type === ReferenceType.ColumnRef
-    }) as ColumnReference[]
-
-    const valueRefs = result.references.filter(r => {
-      return r.type === ReferenceType.ValueRef
-    }) as ValueReference[]
-
-    const queryType = parser.getQueryType(result)
-
-    if (queryType === MySQLQueryType.QtInsert) {
-      const fieldsClauseRefs = columnRefs.filter(r => r.context === 'fieldsClause')
-      const valuesClauseValues = valueRefs.filter(r => r.context === 'valuesClause')
+    if (parser.getQueryType(result) === MySQLQueryType.QtInsert) {
+      const { columnReferences, valueReferences } = result.references
+      const fieldsClauseRefs = columnReferences.filter(r => r.context === 'fieldsClause')
+      const valuesClauseValues = valueReferences.filter(r => r.context === 'valuesClause')
 
       if (fieldsClauseRefs.length !== valuesClauseValues.length) {
         diagnostics.push({
@@ -135,52 +129,45 @@ export class MySQLAnalyzer {
       return diagnostics
     }
 
-    const tableRefs = result.references.filter(r => {
-      return r.type === ReferenceType.TableRef
-    }) as TableReference[]
-
-    diagnostics = diagnostics.concat(this.analyzeTables(statement, tableRefs, columnRefs, valueRefs))
+    const tableDiagnostics = this.analyzeTables(statement, result.references)
+    diagnostics = diagnostics.concat(tableDiagnostics)
 
     return diagnostics
   }
 
-  private analyzeTables(
-    statement: Statement,
-    tableRefs: TableReference[],
-    columnRefs: ColumnReference[],
-    valueRefs: ValueReference[]
-  ): MySQLAnalyzerDiagnostic[] {
+  private analyzeTables(statement: Statement, references: References): MySQLAnalyzerDiagnostic[] {
     let diagnostics: MySQLAnalyzerDiagnostic[] = []
 
-    const databaseName = this.schema?.config.schema
+    if (!this.schema) {
+      return diagnostics
+    }
 
-    for (const tableRef of tableRefs) {
+    const databaseName = this.schema?.config.schema
+    const { tableReferences, columnReferences, valueReferences, aliasReferences } = references
+
+    for (const tableRef of tableReferences) {
       const { table, start, stop } = tableRef
 
-      const schemaTable = this.schema?.tables.find(t => t.name === table)
-      if (!schemaTable) {
+      const schemaTable = getSchemaTable(table, this.schema.tables, aliasReferences)
+      if (schemaTable) {
+        const columnRefs = columnReferences.filter(r => r.tableReference?.table === table)
+        const valueRefs = valueReferences.filter(r => r.columnReference?.tableReference?.table === table)
+        const columnDiagnostics = this.analyzeColumns(statement, schemaTable, columnRefs, valueRefs, aliasReferences)
+        diagnostics = diagnostics.concat(columnDiagnostics)
+      } else {
         const messageParts = [`Table '${table}' does not exist in database '${databaseName}'.`]
-
         const tableNames = this.schema?.tables.map(t => t.name) || []
         const correction = getCorrection(table.toLowerCase(), tableNames)
         if (correction) {
           messageParts.push(` Did you mean '${correction}'?`)
         }
-
         diagnostics.push({
           severity: DiagnosticSeverity.Warning,
           message: messageParts.join(''),
           start: statement.start + start,
           stop: statement.start + stop
         })
-
-        continue
       }
-
-      const values = valueRefs.filter(r => r.columnReference?.tableReference?.table === table)
-      const columns = columnRefs.filter(c => c.tableReference?.table === table)
-
-      diagnostics = diagnostics.concat(this.analyzeColumns(statement, schemaTable, columns, values))
     }
 
     return diagnostics
@@ -190,7 +177,8 @@ export class MySQLAnalyzer {
     statement: Statement,
     schemaTable: SchemaTable,
     columnRefs: ColumnReference[],
-    valueRefs: ValueReference[]
+    valueRefs: ValueReference[],
+    aliasRefs: AliasReference[]
   ): MySQLAnalyzerDiagnostic[] {
     let diagnostics: MySQLAnalyzerDiagnostic[] = []
 
@@ -199,29 +187,25 @@ export class MySQLAnalyzer {
     for (const columnRef of columnRefs) {
       const { column, start, stop } = columnRef
 
-      const schemaColumn = schemaTable.columns.find(c => c.name === column)
-      if (!schemaColumn) {
+      const schemaColumn = getSchemaColumn(column, schemaTable.columns, aliasRefs)
+      if (schemaColumn) {
+        const valueRef = valueRefs.find(r => r.columnReference?.column === column)
+        const columnDiagnostics = this.analyzeColumn(statement, schemaColumn, columnRef, valueRef)
+        diagnostics = diagnostics.concat(columnDiagnostics)
+      } else {
         const messageParts = [`Column '${column}' does not exist in table '${tableName}'.`]
-
         const columnNames = schemaTable.columns.map(c => c.name)
         const correction = getCorrection(column.toLowerCase(), columnNames)
         if (correction) {
           messageParts.push(` Did you mean '${correction}'?`)
         }
-
         diagnostics.push({
           severity: DiagnosticSeverity.Warning,
           message: messageParts.join(''),
           start: statement.start + start,
           stop: statement.start + stop
         })
-
-        continue
       }
-
-      const valueRef = valueRefs.find(r => r.columnReference?.column === column)
-
-      diagnostics = diagnostics.concat(this.analyzeColumn(statement, schemaColumn, columnRef, valueRef))
     }
 
     return diagnostics
@@ -248,7 +232,7 @@ export class MySQLAnalyzer {
       })
     }
 
-    if (valueRef.context === 'whereClause' && schemaColumn.index === null) {
+    if (missingIndex(schemaColumn, valueRef)) {
       diagnostics.push({
         severity: DiagnosticSeverity.Suggestion,
         message: `You can optimize this query by adding a MySQL index for column '${schemaColumn.name}'.`,

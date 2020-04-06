@@ -5013,10 +5013,10 @@ ts-jest@^25.2.1:
     semver "^5.5"
     yargs-parser "^16.1.0"
 
-ts-mysql-parser@^0.1.2:
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/ts-mysql-parser/-/ts-mysql-parser-0.1.2.tgz#2afeccbce900ce05c5e651524eee9d94a90c5b05"
-  integrity sha512-PBXs4YyODJaEuYFeWjwERdlrXPST6y/JE6SiIO9M5Hw8H3RHdCHCz9XTeGNMVnGYW6eWwchS0oHYqur1JtLhMA==
+ts-mysql-parser@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/ts-mysql-parser/-/ts-mysql-parser-0.2.0.tgz#334a67e1f9f0c633054e889ff7fdae33841208ee"
+  integrity sha512-bqCDPxl8/gWjsXEYgOuI7YzieV/3hldvL9AK2RfPfYKVGdz+280ZLP9I3oYAZyty3BFSm62OB255zvOq1pdkXg==
   dependencies:
     antlr4ts "^0.5.0-alpha.3"
     typescript "^3.8.3"

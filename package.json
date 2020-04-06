@@ -76,7 +76,7 @@
   },
   "dependencies": {
     "leven": "^3.1.0",
-    "ts-mysql-parser": "^0.1.2",
+    "ts-mysql-parser": "^0.2.0",
     "ts-mysql-schema": "^0.0.3",
     "typescript": "^3.8.3"
   }
