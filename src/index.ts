@@ -9,7 +9,7 @@ import MySQLParser, {
   AliasReference
 } from 'ts-mysql-parser'
 import { Schema, SchemaTable, SchemaColumn } from 'ts-mysql-schema'
-import { validNullAssignment } from './lib/valid-null-assignment'
+import { invalidAssignment } from './lib/invalid-assignment'
 import { getSchemaColumn } from './lib/get-schema-column'
 import { getSchemaTable } from './lib/get-schema-table'
 import { missingIndex } from './lib/missing-index'
@@ -143,7 +143,7 @@ export class MySQLAnalyzer {
       if (fieldsClauseRefs.length !== valuesClauseValues.length) {
         diagnostics.push({
           severity: DiagnosticSeverity.Warning,
-          message: 'Column count does not match row count',
+          message: 'Column count does not match row count.',
           start: statement.start,
           stop: statement.stop,
           code: DiagnosticCode.ColumnRowMismatch
@@ -251,7 +251,7 @@ export class MySQLAnalyzer {
       return diagnostics
     }
 
-    if (!validNullAssignment(valueRef, schemaColumn) && valueRef.dataType !== schemaColumn.tsType) {
+    if (invalidAssignment(schemaColumn, valueRef)) {
       diagnostics.push({
         severity: DiagnosticSeverity.Warning,
         message: `Type ${valueRef.dataType} is not assignable to type ${schemaColumn.tsType}.`,

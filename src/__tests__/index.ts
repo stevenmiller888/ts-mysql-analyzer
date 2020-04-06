@@ -65,7 +65,7 @@ describe('MySQLAnalyzer', () => {
     expect(diagnostic).toMatchObject([
       {
         severity: DiagnosticSeverity.Warning,
-        message: 'Column count does not match row count',
+        message: 'Column count does not match row count.',
         start: 0,
         stop: 43,
         code: DiagnosticCode.ColumnRowMismatch
@@ -228,7 +228,7 @@ describe('MySQLAnalyzer', () => {
       ])
     })
 
-    it('string not assignable to date', () => {
+    it('invalid date string not assignable to date', () => {
       const analyzer = new MySQLAnalyzer({ schema })
       const diagnostic = analyzer.analyze('SELECT * FROM users WHERE created = "some-string"')
       expect(diagnostic).toMatchObject([
@@ -240,6 +240,12 @@ describe('MySQLAnalyzer', () => {
           code: DiagnosticCode.TypeMismatch
         }
       ])
+    })
+
+    it('valid date string assignable to date', () => {
+      const analyzer = new MySQLAnalyzer({ schema })
+      const diagnostic = analyzer.analyze('SELECT * FROM users WHERE created = "2020-04-06T14:28:25.774Z"')
+      expect(diagnostic).toMatchObject([])
     })
 
     it('valid string assignment', () => {
