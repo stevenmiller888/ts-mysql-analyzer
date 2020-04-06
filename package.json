@@ -1,6 +1,6 @@
 {
   "name": "ts-mysql-analyzer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A MySQL query analyzer.",
   "license": "MIT",
   "repository": "stevenmiller888/ts-mysql-analyzer",
